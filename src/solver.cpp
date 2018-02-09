@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h> 
+#include <math.h>   
+#include <algorithm>
 
 void Solver::Init(unsigned N, float dt, float diff, float visc)
 {
@@ -74,14 +77,14 @@ void Solver::ClearPrevData()
 void Solver::AddDensity(unsigned x, unsigned y, float source)
 {
 	//TODO: Añade el valor de source al array de densidades. Sería interesante usar la macro: XY_TO_ARRAY
-	dens_prev[XY_TO_ARRAY(x, y)] += source * dt;
+	dens_prev[XY_TO_ARRAY(x, y)] += source;
 }
 
 void Solver::AddVelocity(unsigned x, unsigned y, float forceX, float forceY)
 {
 	//TODO: Añade el valor de fuerza a sus respectivos arrays. Sería interesante usar la macro: XY_TO_ARRAY
-	u_prev[XY_TO_ARRAY(x, y)] += forceX * dt;
-	v_prev[XY_TO_ARRAY(x, y)] += forceY * dt;
+	u_prev[XY_TO_ARRAY(x, y)] += forceX;
+	v_prev[XY_TO_ARRAY(x, y)] += forceY;
 }
 
 void Solver::Solve()
@@ -160,9 +163,12 @@ Gauss Seidel -> Matrix x and x0
 void Solver::LinSolve(int b, float * x, float * x0, float aij, float aii) {
     //TODO: Se recomienda usar FOR_EACH_CELL, END_FOR y XY_TO_ARRAY.
     int i, j;
-    FOR_EACH_CELL
-        x0[XY_TO_ARRAY(i, j)] = (-aij * (-x0[XY_TO_ARRAY(i, j - 1)] - x0[XY_TO_ARRAY(i - 1, j)] - x0[XY_TO_ARRAY(i + 1, j)] - x0[XY_TO_ARRAY(i, j + 1)]) + x[XY_TO_ARRAY(i, j)]) / aii;
-    END_FOR
+	for (int k = 0; k < 20; ++k) {
+		FOR_EACH_CELL
+			x[XY_TO_ARRAY(i, j)] = (-aij * (-x[XY_TO_ARRAY(i, j - 1)] - x[XY_TO_ARRAY(i - 1, j)] - x[XY_TO_ARRAY(i + 1, j)] - x[XY_TO_ARRAY(i, j + 1)]) + x0[XY_TO_ARRAY(i, j)]) / aii;
+		END_FOR
+		SetBounds(b, x);
+	}
 }
 
 /*
@@ -172,7 +178,7 @@ por lo que solo con la entrada de dos valores, debemos poder obtener el resultad
 void Solver::Diffuse(int b, float * x, float * x0) {
 //TODO: Solo necesitaremos pasar dos parámetros a nuestro resolutor de sistemas de ecuaciones de Gauss Seidel. Calculamos dichos valores y llamamos a la resolución del sistema.
     float aij = diff * dt * N * N;
-    LinSolve(b, x, x0, aij, 4 * aij);
+    LinSolve(b, x, x0, aij, 1 + 4 * aij);
 }
 
 /*
@@ -182,6 +188,32 @@ en las posiciones x,5.
 */
 void Solver::Advect(int b, float * d, float * d0, float * u, float * v) {
 //TODO: Se aplica el campo vectorial realizando una interploación lineal entre las 4 casillas más cercanas donde caiga el nuevo valor.
+	using namespace std;
+	float dir = -dt * N, deltaX, deltaY;
+	int i, j, cellDest, cell1, cell2, cell3, cell4, oX, oY;
+	FOR_EACH_CELL
+		cellDest = XY_TO_ARRAY(i, j);
+		deltaX = (u[cellDest] * dir);
+		deltaY = (v[cellDest] * dir);
+
+		oX = max(min((int)(cellDest + deltaX), (int)N), 0);
+		oY = max(min((int)(cellDest + deltaY), (int)N), 0);
+
+		cell1 = XY_TO_ARRAY(oX, oY);
+		cell2 = XY_TO_ARRAY(oX+1, oY);
+		cell3 = XY_TO_ARRAY(oX, oY+1);
+		cell4 = XY_TO_ARRAY(oX+1, oY+1);
+
+		deltaX = fabs(deltaX - (int)deltaX);
+		deltaY = fabs(deltaY - (int)deltaY);
+
+		d[cellDest] = d0[cell1] * (1-deltaX) * (1-deltaY) + 
+					  d0[cell2] * deltaX * (1-deltaY) + 
+					  d0[cell3] * (1-deltaX) * deltaY +
+					  d0[cell4] * deltaX * deltaY;
+	END_FOR
+
+	SetBounds(0, d);
 }
 
 /*

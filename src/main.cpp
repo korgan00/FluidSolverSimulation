@@ -54,9 +54,9 @@ static void DrawVelocity(void)
             glLineWidth(1.0f);
             u = solver.u[XY_TO_ARRAY(i, j)];
             v = solver.v[XY_TO_ARRAY(i, j)];
-            glColor3f(u, v, 0);
+            glColor3f(u, v, 0.5);
             glVertex2f(x, y);
-            glVertex2f(x + u*h, y + v*h);
+            glVertex2f(x + u * h, y + v * h);
         glEnd();
     END_FOR
 }
