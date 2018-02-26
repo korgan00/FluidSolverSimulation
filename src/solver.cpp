@@ -141,7 +141,7 @@ Input b: 0, 1 or 2.
 	float xSign = b == 1 ? -1 : 1;
 	float ySign = b == 2 ? -1 : 1;
 
-	for (int i = 0; i < N; ++i) {
+	for (int i = 1; i <= N; ++i) {
 		x[XY_TO_ARRAY(i, 0)] = xSign * x[XY_TO_ARRAY(i, 1)];
 		x[XY_TO_ARRAY(i, N + 1)] = xSign * x[XY_TO_ARRAY(i, N)];
 		x[XY_TO_ARRAY(0, i)] = ySign * x[XY_TO_ARRAY(1, i)];
@@ -163,7 +163,7 @@ Gauss Seidel -> Matrix x and x0
 void Solver::LinSolve(int b, float * x, float * x0, float aij, float aii) {
     //TODO: Se recomienda usar FOR_EACH_CELL, END_FOR y XY_TO_ARRAY.
     int i, j;
-	for (int k = 0; k < 20; ++k) {
+	for (int k = 0; k < SOLVE_ITERATIONS; ++k) {
 		FOR_EACH_CELL
 			x[XY_TO_ARRAY(i, j)] = (-aij * (-x[XY_TO_ARRAY(i, j - 1)] - x[XY_TO_ARRAY(i - 1, j)] - x[XY_TO_ARRAY(i + 1, j)] - x[XY_TO_ARRAY(i, j + 1)]) + x0[XY_TO_ARRAY(i, j)]) / aii;
 		END_FOR
@@ -189,31 +189,42 @@ en las posiciones x,5.
 void Solver::Advect(int b, float * d, float * d0, float * u, float * v) {
 //TODO: Se aplica el campo vectorial realizando una interploación lineal entre las 4 casillas más cercanas donde caiga el nuevo valor.
 	using namespace std;
-	float dir = -dt * N, deltaX, deltaY;
-	int i, j, cellDest, cell1, cell2, cell3, cell4, oX, oY;
+	float dir = -dt * N, 
+        currU, currV,
+        deltaX, deltaY, 
+        oX_f, oY_f;
+	int i, j, 
+        cellDest, 
+        cell1, cell2, cell3, cell4,
+        oX, oY;
+
 	FOR_EACH_CELL
 		cellDest = XY_TO_ARRAY(i, j);
-		deltaX = (u[cellDest] * dir);
-		deltaY = (v[cellDest] * dir);
+        currU = u[cellDest];
+        currV = v[cellDest];
 
-		oX = max(min((int)(cellDest + deltaX), (int)N), 0);
-		oY = max(min((int)(cellDest + deltaY), (int)N), 0);
+        oX_f = i + (currU * dir);
+        oY_f = j + (currV * dir);
 
-		cell1 = XY_TO_ARRAY(oX, oY);
-		cell2 = XY_TO_ARRAY(oX+1, oY);
-		cell3 = XY_TO_ARRAY(oX, oY+1);
-		cell4 = XY_TO_ARRAY(oX+1, oY+1);
+        oX = (int)oX_f;
+        oY = (int)oY_f;
+        if (oX > 0 && oX < N && oY > 0 && oY < N) {
+            cell1 = XY_TO_ARRAY(oX, oY);
+            cell2 = XY_TO_ARRAY(oX + 1, oY);
+            cell3 = XY_TO_ARRAY(oX, oY + 1);
+            cell4 = XY_TO_ARRAY(oX + 1, oY + 1);
 
-		deltaX = fabs(deltaX - (int)deltaX);
-		deltaY = fabs(deltaY - (int)deltaY);
+            deltaX = fabs(oX_f - oX);
+            deltaY = fabs(oY_f - oY);
 
-		d[cellDest] = d0[cell1] * (1-deltaX) * (1-deltaY) + 
-					  d0[cell2] * deltaX * (1-deltaY) + 
-					  d0[cell3] * (1-deltaX) * deltaY +
-					  d0[cell4] * deltaX * deltaY;
+            d[cellDest] = d0[cell1] * (1 - deltaX) * (1 - deltaY) +
+                          d0[cell2] * deltaX * (1 - deltaY) +
+                          d0[cell3] * (1 - deltaX) * deltaY +
+                          d0[cell4] * deltaX * deltaY;
+        }
 	END_FOR
 
-	SetBounds(0, d);
+	SetBounds(b, d);
 }
 
 /*

@@ -5,6 +5,7 @@
 #define FOR_EACH_CELL for ( i=1 ; i<=N ; i++ ) { for ( j=1 ; j<=N ; j++ ) {
 #define END_FOR }}
 #define SWAP(x0,x) {float * tmp=x0;x0=x;x=tmp;}
+#define SOLVE_ITERATIONS 20
 
 class Solver
 {

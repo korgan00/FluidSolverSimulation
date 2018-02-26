@@ -47,33 +47,33 @@ static void DrawVelocity(void)
     int i, j;
     float x, y, u, v;
     FOR_EACH_CELL
-        x = (i - 0.5) * h;
-        y = (j - 0.5) * h;
+        x = (i - 1) * h;
+        y = (j - 1) * h;
 
         glBegin(GL_LINES);
             glLineWidth(1.0f);
             u = solver.u[XY_TO_ARRAY(i, j)];
             v = solver.v[XY_TO_ARRAY(i, j)];
-            glColor3f(u, v, 0.5);
+            glColor3f(u*20, v*20, 0.5);
             glVertex2f(x, y);
-            glVertex2f(x + u * h, y + v * h);
+            glVertex2f(x + u, y + v);
         glEnd();
     END_FOR
 }
 
 static void DrawDensity(void)
 {
-//TODO
+    //TODO
 	float h = 1.0f / N;
 	int i, j;
 	float x, y, d;
 	FOR_EACH_CELL
-		x = (i - 0.5) * h;
-		y = (j - 0.5) * h;
+		x = (i - 1) * h;
+		y = (j - 1) * h;
 
 		glBegin(GL_QUADS);
 			d = solver.dens[XY_TO_ARRAY(i, j)];
-			glColor3f(d, d, d);
+            glColor3f(d, d, d);
 			glVertex2f(x, y);
 
 			d = solver.dens[XY_TO_ARRAY(i + 1, j)];
