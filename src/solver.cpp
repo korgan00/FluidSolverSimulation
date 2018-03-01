@@ -5,6 +5,7 @@
 #include <stdlib.h> 
 #include <math.h>   
 #include <algorithm>
+#include <memory>
 
 void Solver::Init(unsigned N, float dt, float diff, float visc)
 {
@@ -179,11 +180,17 @@ void Solver::LinSolve(int b, float * x, float * x0, float aij, float aii) {
     int i, j;
 	for (int k = 0; k < SOLVE_ITERATIONS; ++k) {
 		FOR_EACH_CELL
-			x[XY_TO_ARRAY(i, j)] = (-aij * (-x[XY_TO_ARRAY(i, j - 1)] - x[XY_TO_ARRAY(i - 1, j)] - x[XY_TO_ARRAY(i + 1, j)] - x[XY_TO_ARRAY(i, j + 1)]) + x0[XY_TO_ARRAY(i, j)]) / aii;
+#ifdef JACOBI
+            x[XY_TO_ARRAY(i, j)] = (-aij * (-x0[XY_TO_ARRAY(i, j - 1)] - x0[XY_TO_ARRAY(i - 1, j)] - x0[XY_TO_ARRAY(i + 1, j)] - x0[XY_TO_ARRAY(i, j + 1)]) + x0[XY_TO_ARRAY(i, j)]) / aii;
+#else
+            x[XY_TO_ARRAY(i, j)] = (-aij * (-x[XY_TO_ARRAY(i, j - 1)] - x[XY_TO_ARRAY(i - 1, j)] - x[XY_TO_ARRAY(i + 1, j)] - x[XY_TO_ARRAY(i, j + 1)]) + x0[XY_TO_ARRAY(i, j)]) / aii;
+#endif
 		END_FOR
 		SetBounds(b, x);
+        memccpy(x0, x, (N + 2) * (N + 2), sizeof(float));
 	}
 }
+
 
 /*
 Nuestra función de difusión solo debe resolver el sistema de ecuaciones simplificado a las celdas contiguas de la casilla que queremos resolver,

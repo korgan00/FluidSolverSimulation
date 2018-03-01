@@ -6,7 +6,7 @@
 #define END_FOR }}
 #define SWAP(x0,x) {float * tmp=x0;x0=x;x=tmp;}
 #define SOLVE_ITERATIONS 20
-#define ACTIVATE_GENERATORS true
+#define JACOBI
 
 class Solver
 {
