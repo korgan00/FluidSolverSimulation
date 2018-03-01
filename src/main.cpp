@@ -142,10 +142,15 @@ static void KeyFunc(unsigned char key, int x, int y)
 		exit(0);
 		break;
 
-	case 'v':
-	case 'V':
-		dvel = !dvel;
-		break;
+    case 'v':
+    case 'V':
+        dvel = !dvel;
+        break;
+
+    case 'g':
+    case 'G':
+        solver.generators = !solver.generators;
+        break;
 	}
 }
 
@@ -268,7 +273,8 @@ int main(int argc, char ** argv)
 	printf("\t Add densities with the right mouse button\n");
 	printf("\t Add velocities with the left mouse button and dragging the mouse\n");
 	printf("\t Toggle density/velocity display with the 'v' key\n");
-	printf("\t Clear the simulation by pressing the 'c' key\n");
+    printf("\t Toggle generators with the 'g' key\n");
+    printf("\t Clear the simulation by pressing the 'c' key\n");
 	printf("\t Quit by pressing the 'q' key\n");
 
 	dvel = false;

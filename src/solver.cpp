@@ -12,6 +12,7 @@ void Solver::Init(unsigned N, float dt, float diff, float visc)
 	this->diff = diff;
 	this->visc = visc;
 	this->N = N;
+    this->generators = true;
 }
 
 /*
@@ -95,6 +96,11 @@ void Solver::Solve()
 
 void Solver::DensStep()
 {
+    if (generators) {
+        dens[XY_TO_ARRAY(1, N / 2)] = 100;
+        dens[XY_TO_ARRAY(N, 4)] = -10;
+    }
+
 	AddSource(dens, dens_prev);			//Adding input density (dens_prev) to final density (dens).
 	SWAP(dens_prev, dens)				//Swapping matrixes, because we want save the next result in dens, not in dens_prev.
 	Diffuse(0, dens, dens_prev);		//Writing result in dens because we made the swap before. bi = dens_prev. The initial trash in dens matrix, doesnt matter, because it converges anyways.
@@ -104,6 +110,13 @@ void Solver::DensStep()
 
 void Solver::VelStep()
 {
+    if (generators) {
+        v[XY_TO_ARRAY(N, 3)] = 0.5;
+        v[XY_TO_ARRAY(1, 2 * N / 3)] = -1.5;
+        u[XY_TO_ARRAY(N, 3)] = -1;
+        u[XY_TO_ARRAY(1, 2 * N / 3)] = 1;
+    }
+
 	AddSource(u, u_prev);
 	AddSource(v, v_prev);
 	SWAP (u_prev, u)			
@@ -152,6 +165,7 @@ Input b: 0, 1 or 2.
 	x[XY_TO_ARRAY(N + 1, 0)] = (x[XY_TO_ARRAY(N, 0)] + x[XY_TO_ARRAY(N + 1, 1)]) / 2;
 	x[XY_TO_ARRAY(0, N + 1)] = (x[XY_TO_ARRAY(1, N + 1)] + x[XY_TO_ARRAY(0, N)]) / 2;
 	x[XY_TO_ARRAY(N + 1, N + 1)] = (x[XY_TO_ARRAY(N, N + 1)] + x[XY_TO_ARRAY(N + 1, N)]) / 2;
+
 }
 
 /*
@@ -221,6 +235,8 @@ void Solver::Advect(int b, float * d, float * d0, float * u, float * v) {
                           d0[cell2] * deltaX * (1 - deltaY) +
                           d0[cell3] * (1 - deltaX) * deltaY +
                           d0[cell4] * deltaX * deltaY;
+        } else {
+            d[cellDest] = 0;
         }
 	END_FOR
 

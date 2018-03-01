@@ -6,6 +6,7 @@
 #define END_FOR }}
 #define SWAP(x0,x) {float * tmp=x0;x0=x;x=tmp;}
 #define SOLVE_ITERATIONS 20
+#define ACTIVATE_GENERATORS true
 
 class Solver
 {
@@ -15,6 +16,7 @@ class Solver
 
 public:
 	float * u, * v, * dens;
+    bool generators;
 	void Init(unsigned N, float dt, float diff, float visc);
 	void FreeData(void);
 	void ClearData(void);
